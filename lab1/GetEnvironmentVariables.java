@@ -56,5 +56,4 @@ public class GetEnvironmentVariables {
         System.out.println(source);
 
     }
-
 }
