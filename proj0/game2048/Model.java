@@ -138,8 +138,8 @@ public class Model extends Observable {
                     changed = true;
                     score+=(t1.value()*2);
                 } else {
-                    board.move(c, 2, t1);
                     board.move(c, 3, t2);
+                    board.move(c, 2, t1);
                     changed = true;
                 }
             }
@@ -155,15 +155,15 @@ public class Model extends Observable {
                         score+=(t3.value()*2);
                     } else {
                         if (t1.value() == t2.value()){
+                            board.move(c, 3, t3);
                             board.move(c, 2, t1);
                             board.move(c, 2, t2);
-                            board.move(c, 3, t3);
                             changed = true;
                             score+=(t1.value()*2);
                         } else {
-                            board.move(c, 1, t1);
-                            board.move(c, 2, t2);
                             board.move(c, 3, t3);
+                            board.move(c, 2, t2);
+                            board.move(c, 1, t1);
                             changed = true;
                         }
                     }
@@ -175,33 +175,34 @@ public class Model extends Observable {
                 Tile t4 = board.tile(c, tileRows.get(3));
                 if (t4.value() == t3.value()) {
                     if (t2.value() == t1.value()){
-                        board.move(c, 2, t1);
-                        board.move(c, 2, t2);
                         board.move(c, 3, t3);
                         board.move(c, 3, t4);
+                        board.move(c, 2, t1);
+                        board.move(c, 2, t2);
                         changed = true;
                         score+=((t2.value()*2)+(t4.value()*2));
                     } else {
-                        board.move(c, 1, t1);
-                        board.move(c, 2, t2);
                         board.move(c, 3, t3);
                         board.move(c, 3, t4);
+                        board.move(c, 2, t2);
+                        board.move(c, 1, t1);
                         score+=(t4.value()*2);
                         changed = true;
                     }
                 } else {
                     if (t2.value() == t1.value()){
+                        board.move(c, 3, t4);
+                        board.move(c, 2, t3);
                         board.move(c, 1, t1);
                         board.move(c, 1, t2);
-                        board.move(c, 2, t3);
-                        board.move(c, 3, t4);
+
                         changed = true;
                         score+=(t1.value()*2);
                     } else if (t3.value() == t2.value()){
-                        board.move(c, 1, t1);
-                        board.move(c, 2, t2);
-                        board.move(c, 2, t3);
                         board.move(c, 3, t4);
+                        board.move(c, 2, t3);
+                        board.move(c, 2, t2);
+                        board.move(c, 1, t1);
                         changed = true;
                         score+=(t3.value()*2);
                     }

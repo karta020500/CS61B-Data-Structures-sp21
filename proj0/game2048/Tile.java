@@ -47,7 +47,6 @@ public class Tile {
         next = result;
         return result;
     }
-
     /** Return the result of merging OTHERTILE with me after moving to
      *  (COL, ROW). */
     public Tile merge(int col, int row, Tile otherTile) {
@@ -55,7 +54,6 @@ public class Tile {
         next = otherTile.next = new Tile(2 * value, col, row);
         return next;
     }
-
     /** Return the distance in rows or columns between me and my successor
      *  tile (0 if I have no successor). */
     public int distToNext() {
