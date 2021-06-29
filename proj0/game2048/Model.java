@@ -110,9 +110,6 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-        //1. tile.merge();
-        //2. merged tile can not be merge again
-        //3. trailing tile can not be merge.
         board.setViewingPerspective(side);
         ArrayList<Integer> tileRows = new ArrayList<Integer>();
         for (int c = 0; c < board.size(); c++){
