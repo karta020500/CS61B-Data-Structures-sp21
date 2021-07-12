@@ -15,31 +15,30 @@ public class LinkedListDeque<Item> implements Deque<Item>, Iterable {
         }
     }
 
-    class ListIterator<Item> implements Iterator {
-        Node current;
+    private class DequeIterator<Item> implements Iterator {
+        private Node sentinel;
+        private Node node;
 
-        // initialize pointer to head of the list for iteration
-        public ListIterator(Node n)
+        public DequeIterator(Node s)
         {
-            current = n;
+            sentinel = s;
+            if (sentinel != sentinel.next){
+                node = sentinel.next;
+            } else node = null;
         }
 
-        // returns false if next element does not exist
+        @Override
         public boolean hasNext()
         {
-            return current != null;
+            return node.next != sentinel;
         }
 
+        @Override
         public Item next()
         {
-            Item data = (Item) current.item;
-            current = current.next;
+            Item data = (Item) node.item;
+            node = node.next;
             return data;
-        }
-
-        public void remove()
-        {
-            throw new UnsupportedOperationException();
         }
     }
 
@@ -55,6 +54,8 @@ public class LinkedListDeque<Item> implements Deque<Item>, Iterable {
 
     public LinkedListDeque() {
         sentinel = new Node(null, sentinel, sentinel);
+        sentinel.next = sentinel;
+        sentinel.prev = sentinel;
         size = 0;
     }
 
@@ -71,7 +72,10 @@ public class LinkedListDeque<Item> implements Deque<Item>, Iterable {
     @Override
     public void addFirst(Item i){
         sentinel.next = new Node(i, sentinel, sentinel.next);
-        if (size == 0) sentinel.prev = sentinel.next;
+        if (size == 0) {
+            sentinel.next.next = sentinel;
+            sentinel.prev = sentinel.next;
+        }
         size += 1;
     }
 
@@ -106,17 +110,21 @@ public class LinkedListDeque<Item> implements Deque<Item>, Iterable {
     @Override
     public Item removeFirst(){
         if (size < 1) return null;
+        Item i = sentinel.next.item;
         sentinel.next = sentinel.next.next;
         sentinel.next.prev = sentinel;
-        return sentinel.next.item;
+        size -= 1;
+        return i;
     }
 
     @Override
     public Item removeLast(){
-        if (size == 0) return null;
+        if (size < 1) return null;
+        Item i = sentinel.prev.item;
         sentinel.prev = sentinel.prev.prev;
         sentinel.prev.next = sentinel;
-        return sentinel.prev.item;
+        size -= 1;
+        return i;
     }
 
     @Override
@@ -129,17 +137,17 @@ public class LinkedListDeque<Item> implements Deque<Item>, Iterable {
         return pointer.item;
     }
 
+    @Override
     public Iterator<Item> iterator(){
-        return new ListIterator<Item> (sentinel.next);
+        return new DequeIterator<Item> (sentinel);
     }
 
     public boolean equals(Object o){
-        if (o instanceof LinkedListDeque){
-            if (((LinkedListDeque<Item>) o).size != size) return false;
+        if (!(o instanceof LinkedListDeque)) return false;
+        if (((LinkedListDeque<Item>) o).size != size) return false;
             for (int i = 0; i < size; i++){
                 if (((LinkedListDeque<Item>) o).get(i) != this.get(i)) return false;
             }
-        }
-        return false;
+        return true;
     }
 }
