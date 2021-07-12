@@ -22,8 +22,10 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
         @Override
         public Item next()
         {
-            Item data = items[pointer+1];
-            pointer++;
+            int first = pointer + 1;
+            if (first == items.length) first = 0;
+            Item data = items[first];
+            pointer = first;
             return data;
         }
     }
@@ -43,8 +45,9 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
     private void resize(int capacity) {
         Item[] a = (Item[]) new Object[capacity];
         int first = nextFirst + 1;
+        if (first >= size) first = 0;
         int count = 0;
-        for (; count <= size; count++){
+        for (; count < size; count++){
             a[count] = items[first];
             first++;
             if (first == items.length) first = 0;
@@ -56,7 +59,7 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
 
     @Override
     public void addFirst(Item i){
-        if (size == items.length-1) {
+        if (size == items.length) {
             resize(size * 2);
         }
         items[nextFirst] = i;
@@ -67,7 +70,7 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
 
     @Override
     public void addLast(Item i){
-        if (size == items.length-1) {
+        if (size == items.length) {
             resize(size * 2);
         }
         items[nextLast] = i;
@@ -100,6 +103,7 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
 
     @Override
     public Item removeFirst() {
+        if (size < 1) return null;
         if ((size < items.length / 2) && (size > 2)){
             resize(items.length / 2);
         }
@@ -113,8 +117,9 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
 
     @Override
     public Item removeLast(){
+        if (size < 1) return null;
         if ((size < items.length / 2) && (size > 2)){
-            resize(items.length / 2);
+           resize(items.length / 2);
         }
         int last = nextLast - 1;
         if (last < 0) last = items.length-1;
@@ -126,11 +131,13 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable {
 
     @Override
     public Item get(int i){
-        if (i >= size) {
-            Item defaultItem = (Item) new Object();
-            return defaultItem;
+        if (i >= size) return null;
+        int first = nextFirst + 1 + i;
+        if (first >= items.length) {
+            int surpass = first - items.length;
+            first = 0 + surpass;
         }
-        return items[nextFirst+1+i];
+        return items[first];
     }
 
     @Override

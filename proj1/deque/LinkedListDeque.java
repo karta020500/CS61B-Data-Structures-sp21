@@ -129,10 +129,7 @@ public class LinkedListDeque<Item> implements Deque<Item>, Iterable {
 
     @Override
     public Item get(int index){
-        if (index >= size) {
-            Item defaultItem = (Item) new Object();
-            return defaultItem;
-        }
+        if (index >= size) return null;
         Node pointer = sentinel;
         for (int i = 0; i <= index; i++){
             pointer = pointer.next;
