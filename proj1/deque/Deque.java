@@ -5,7 +5,10 @@ public interface Deque<Item> {
 
     public void addLast(Item i);
 
-    public boolean isEmpty();
+    public default boolean isEmpty(){
+        if (size() == 0) return true;
+        return false;
+    };
 
     public int size();
 
