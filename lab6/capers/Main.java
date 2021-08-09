@@ -52,11 +52,13 @@ public class Main {
             break;
         case "dog":
             validateNumArgs("dog", args, 4);
-            // TODO: make a dog
+            text = args[1];
+            CapersRepository.makeDog("dog", text, 4);
             break;
         case "birthday":
             validateNumArgs("birthday", args, 2);
-            // TODO: celebrate this dog's birthday
+            text = args[1];
+            CapersRepository.celebrateBirthday(text);
             break;
         default:
             exitWithError(String.format("Unknown command: %s", args[0]));
