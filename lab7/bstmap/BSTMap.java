@@ -3,32 +3,77 @@ package bstmap;
 import java.util.Iterator;
 import java.util.Set;
 
-public class BSTMap implements Map61B<K, V>{
+public class BSTMap<K extends Comparable, V> implements Map61B<K, V>{
+    private class BSTNode {
+        public K key;
+        public V val;
+        public BSTNode left;
+        public BSTNode right;
+
+        public BSTNode(K key, V val, BSTNode left, BSTNode right) {
+            this.key = key;
+            this.val = val;
+            this.right = right;
+            this.left = left;
+        }
+    }
+
+    private int size;
+    private BSTNode root;
+
+    public BSTMap(){
+        this.root = null;
+        this.size = 0;
+    }
 
     /** Removes all of the mappings from this map. */
     public void clear(){
-
+        this.root = null;
+        this.size = 0;
     };
 
     /* Returns true if this map contains a mapping for the specified key. */
     public boolean containsKey(K key){
+        if (find(root, key) == null) return false;
         return true;
     };
+
+    private BSTNode find(BSTNode root, K key){
+        if (root == null) return null;
+        if (root.key.equals(key)){
+            return root;
+        } else if (root.key < key){
+            return find(root.left, key);
+        } else {
+            return find(root.right, key);
+        }
+    }
 
     /* Returns the value to which the specified key is mapped, or null if this
      * map contains no mapping for the key.
      */
     public V get(K key){
+        if (this.root != null){
+
+        }
 
     };
 
     /* Returns the number of key-value mappings in this map. */
+    @Override
     public int size(){
-
+        return this.size;
     };
 
     /* Associates the specified value with the specified key in this map. */
     public void put(K key, V value){
+        if (this.root != null){
+
+        } else {
+            this.root = new BSTNode(key, value, null, null);
+            this.size++;
+        }
+
 
     };
 
