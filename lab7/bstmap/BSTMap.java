@@ -28,8 +28,8 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V>{
 
     /** Removes all of the mappings from this map. */
     public void clear(){
-        this.root = null;
-        this.size = 0;
+        root = null;
+        size = 0;
     };
 
     /* Returns true if this map contains a mapping for the specified key. */
@@ -38,25 +38,25 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V>{
         return true;
     };
 
-    private BSTNode find(BSTNode root, K key){
-        if (root == null) return null;
-        if (root.key.equals(key)){
-            return root;
-        } else if (root.key < key){
-            return find(root.left, key);
-        } else {
-            return find(root.right, key);
+    private BSTNode find(BSTNode node, K key){
+        if (node == null) return null;
+        if (key.equals(node.key)){
+            return node;
+        } else if (key.compareTo(node.key) < 0){
+            return find(node.left, key);
+        } else if (key.compareTo(node.key) > 0){
+            return find(node.right, key);
         }
+        return node;
     }
 
     /* Returns the value to which the specified key is mapped, or null if this
      * map contains no mapping for the key.
      */
     public V get(K key){
-        if (this.root != null){
-
-        }
-
+        BSTNode node =  find(root, key);
+        if (node == null) return null;
+        return node.val;
     };
 
     /* Returns the number of key-value mappings in this map. */
@@ -67,15 +67,30 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V>{
 
     /* Associates the specified value with the specified key in this map. */
     public void put(K key, V value){
-        if (this.root != null){
-
+        if (root == null){
+            root = new BSTNode(key, value, null, null);
+            size++;
         } else {
-            this.root = new BSTNode(key, value, null, null);
-            this.size++;
+            insert(root, key, value);
         }
-
-
     };
+
+    private BSTNode insert(BSTNode node, K key, V value){
+        if (node == null){
+            size++;
+            return new BSTNode(key, value, null, null);
+        }
+        if (key.compareTo(node.key) < 0){
+            node.left = insert(node.left, key, value);
+        } else if (key.compareTo(node.key) > 0){
+            node.right = insert(node.right, key, value);
+        } else {
+            node.val = value;
+            return node;
+        }
+        return node;
+    }
+
 
     /* Returns a Set view of the keys contained in this map. Not required for Lab 7.
      * If you don't implement this, throw an UnsupportedOperationException. */
