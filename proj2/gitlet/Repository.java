@@ -26,4 +26,10 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /* TODO: fill in the rest of this class. */
+    public static void init(){
+        GITLET_DIR.mkdir();
+        Commit initCommit = new Commit();
+        File initCommitFile = join(GITLET_DIR, "initCommit");
+        writeObject(initCommitFile, initCommit);
+    }
 }
