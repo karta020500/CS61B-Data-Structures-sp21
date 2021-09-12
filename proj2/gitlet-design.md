@@ -1,23 +1,34 @@
 # Gitlet Design Document
 
-**Name**:
+**Name**: Brian Huang
 
 ## Classes and Data Structures
 
-### Class 1
+### Repository
 
 #### Fields
 
-1. Field 1
-2. Field 2
+1. head
+2. addition
+3. removal
 
+#### methods
 
-### Class 2
+1. init
+2. commit
+3. status
+4. merge
+
+### Commit
 
 #### Fields
 
-1. Field 1
-2. Field 2
+1. prev
+2. date
+3. message
+4. file
+
+#### methods
 
 
 ## Algorithms
