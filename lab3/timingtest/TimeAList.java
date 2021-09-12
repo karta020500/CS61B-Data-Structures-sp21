@@ -1,5 +1,4 @@
 package timingtest;
-import edu.princeton.cs.algs4.Stopwatch;
 
 /**
  * Created by hug.
@@ -22,6 +21,6 @@ public class TimeAList {
     }
 
     public static void timeAListConstruction() {
-        // TODO: YOUR CODE HERE
+        //printTimingTable();
     }
 }
