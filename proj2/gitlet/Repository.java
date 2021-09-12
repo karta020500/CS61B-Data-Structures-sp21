@@ -1,6 +1,8 @@
 package gitlet;
 
 import java.io.File;
+import java.nio.file.Files;
+
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -27,9 +29,17 @@ public class Repository {
 
     /* TODO: fill in the rest of this class. */
     public static void init(){
+        if (GITLET_DIR.exists()){
+            System.out.print("A Gitlet version-control system already exists in the current directory.");
+        }
         GITLET_DIR.mkdir();
         Commit initCommit = new Commit();
         File initCommitFile = join(GITLET_DIR, "initCommit");
         writeObject(initCommitFile, initCommit);
+    }
+
+    public static  void add(){
+        //TODO check difference between CWD and Head commit.
+        //TODO based on change writing log and copy CWD condition. ps. commit can based on this copy to write things into Blobs Dir or Commit Dir.
     }
 }
