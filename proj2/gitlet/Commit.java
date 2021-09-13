@@ -4,6 +4,7 @@ package gitlet;
 
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.List;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -24,7 +25,10 @@ public class Commit implements Serializable {
     private String message;
     /** The timestamp of this Commit. */
     private Date timestamp;
-    /**TODO The tracking files of this Commit. */
+    /** The List for tracking files of this Commit. */
+    private List<String> blobs;
+    /** commit's parents */
+    private List<String> parents;
 
     public Commit(){
         this.message = "initial commit";

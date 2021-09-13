@@ -38,8 +38,8 @@ public class Repository {
         writeObject(initCommitFile, initCommit);
     }
 
-    public static  void add(){
+    public static void add(String file){
         //TODO check difference between CWD and Head commit.
-        //TODO based on change writing log and copy CWD condition. ps. commit can based on this copy to write things into Blobs Dir or Commit Dir.
+        //TODO based on change writing log. ps. commit can based on log to write changed files into Blobs Dir or Commit Dir.
     }
 }
