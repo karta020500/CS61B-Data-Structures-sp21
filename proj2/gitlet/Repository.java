@@ -38,8 +38,38 @@ public class Repository {
         writeObject(initCommitFile, initCommit);
     }
 
-    public static void add(String file){
+    public static void add(String file) {
         //TODO check difference between CWD and Head commit.
         //TODO based on change writing log. ps. commit can based on log to write changed files into Blobs Dir or Commit Dir.
+    }
+
+    public static void remove(String file) {
+        //TODO check whether it's staged for addition to decide remove from addition or not.
+        //TODO check If the file is tracked in the current commit, stage it for removal and make sure file didn't in CWD.
+    }
+
+    public static void log() {
+        //TODO display information about each commit backwards along the commit tree until the initial commit to console.
+        //Note: may include merge.
+    }
+
+    public static void globalLog() {
+        //TODO displays information about all commits ever made.
+        //Note: order is not important.
+    }
+
+    public static void find(String message) {
+        //TODO search for matched commit based on input commit message.
+    }
+
+    public static void status() {
+        //TODO show ropo status including branches, staged file, removed file.
+        //Note: should maintain one text file to tracking those info.
+    }
+
+    public static void checkout(String file, String commitId, String branchName) {
+        //TODO 1. takes version of the file to CWD from head of branch.
+        //TODO 2. takes version of the file to CWD from specific commit.
+        //TODO 3. takes all the file to CWD from the specific branch head of commit.
     }
 }

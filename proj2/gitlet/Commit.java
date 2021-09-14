@@ -30,7 +30,7 @@ public class Commit implements Serializable {
     /** commit's parents */
     private List<String> parents;
 
-    public Commit(){
+    public Commit() {
         this.message = "initial commit";
         this.timestamp = new Date(0);/**TODO verify the Date */
     }
