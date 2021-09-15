@@ -72,4 +72,20 @@ public class Repository {
         //TODO 2. takes version of the file to CWD from specific commit.
         //TODO 3. takes all the file to CWD from the specific branch head of commit.
     }
+
+    public static void branch(String branchName) {
+        //TODO 1. use a file to record each branch with a corresponding commit.
+    }
+
+    public static void removeBranch(String branchName) {
+        //TODO 1. delete data related to specified branch name in the branch file.
+    }
+
+    public static void reset(String commitId) {
+        //TODO 1.  moves the current branch’s head to that commit node.
+        //TODO 2. clear the staged area.
+    }
+
+    public static void merge(String branchName) {
+    }
 }
