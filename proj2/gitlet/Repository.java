@@ -1,6 +1,6 @@
 package gitlet;
 
-import java.io.File;
+import java.io.*;
 import java.nio.file.Files;
 
 import static gitlet.Utils.*;
@@ -30,12 +30,17 @@ public class Repository {
     /* TODO: fill in the rest of this class. */
     public static void init(){
         if (GITLET_DIR.exists()){
-            System.out.print("A Gitlet version-control system already exists in the current directory.");
+            System.out.print("A Gitlet version-control system already exists in the current directory. \n");
+            System.exit(0);
         }
         GITLET_DIR.mkdir();
         Commit initCommit = new Commit();
-        File initCommitFile = join(GITLET_DIR, "initCommit");
-        writeObject(initCommitFile, initCommit);
+        String hashCode = sha1(initCommit.getMessage(), initCommit.getTimestamp().toString());
+        File initCommitFile = join(GITLET_DIR, hashCode);
+        writeObject(initCommitFile, hashCode);
+        File f = new File(GITLET_DIR, "repo_info.txt");
+        Utils.writeContents(f, "master:"+ hashCode);
+        //TODO store repo_info as json using gson.
     }
 
     public static void add(String file) {
@@ -88,4 +93,5 @@ public class Repository {
 
     public static void merge(String branchName) {
     }
+
 }

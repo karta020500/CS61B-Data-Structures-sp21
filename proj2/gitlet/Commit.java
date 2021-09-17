@@ -32,7 +32,24 @@ public class Commit implements Serializable {
 
     public Commit() {
         this.message = "initial commit";
-        this.timestamp = new Date(0);/**TODO verify the Date */
+        this.timestamp = new Date(0);
+        this.blobs = null;
+        this.parents = null;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+    public Date getTimestamp() {
+        return this.timestamp;
+    }
+
+    public List<String> getBlobs() {
+        return this.blobs;
+    }
+
+    public List<String> getParents() {
+        return this.parents;
     }
 
     /* TODO: fill in the rest of this class. */
