@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.Scanner;
 
 import static gitlet.Utils.*;
 
@@ -26,6 +27,14 @@ public class Repository {
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
+    /** The commits directory*/
+    public static final File COMMITS_DIR = join(GITLET_DIR, "commits");
+    /** The blobs directory*/
+    public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
+    /** The stage for addition directory*/
+    public static final File ADDITION_DIR = join(GITLET_DIR, "addition");
+    /** The test directory*/
+    public static final File TEST_DIR = join(CWD, "test");
 
     /* TODO: fill in the rest of this class. */
     public static void init(){
@@ -33,19 +42,52 @@ public class Repository {
             System.out.print("A Gitlet version-control system already exists in the current directory. \n");
             System.exit(0);
         }
-        GITLET_DIR.mkdir();
+        Repository.makeInitFileDir();
         Commit initCommit = new Commit();
         String hashCode = sha1(initCommit.getMessage(), initCommit.getTimestamp().toString());
-        File initCommitFile = join(GITLET_DIR, hashCode);
-        writeObject(initCommitFile, hashCode);
+        File initCommitFile = join(COMMITS_DIR, hashCode);
+        writeObject(initCommitFile, initCommit);
         File f = new File(GITLET_DIR, "repo_info.txt");
-        Utils.writeContents(f, "master:"+ hashCode);
-        //TODO store repo_info as json using gson.
+        Utils.writeContents(f, "master" + hashCode);
+    }
+
+    private static void makeInitFileDir() {
+        GITLET_DIR.mkdir();
+        COMMITS_DIR.mkdir();
+        BLOBS_DIR.mkdir();
     }
 
     public static void add(String file) {
+        ADDITION_DIR.mkdir();
+        TEST_DIR.mkdir();
+        String[] filesContent = Repository.readFiles();
+        
         //TODO check difference between CWD and Head commit.
         //TODO based on change writing log. ps. commit can based on log to write changed files into Blobs Dir or Commit Dir.
+    }
+
+    private static String[] readFiles() {
+        File[] filesList = TEST_DIR.listFiles();
+        System.out.println("List of files and directories in the specified directory:");
+        Scanner sc = null;
+        String[] res = new String[filesList.length];
+        int index = 0;
+        try {
+            for (File file : filesList) {
+                sc = new Scanner(file);
+                String input;
+                StringBuffer sb = new StringBuffer();
+                while (sc.hasNextLine()) {
+                    input = sc.nextLine();
+                    sb.append(input);
+                }
+                res[index] = sb.toString();
+                index++;
+            }
+        } catch (FileNotFoundException e) {
+            //do nothings
+        }
+        return res;
     }
 
     public static void remove(String file) {
@@ -87,7 +129,7 @@ public class Repository {
     }
 
     public static void reset(String commitId) {
-        //TODO 1.  moves the current branch’s head to that commit node.
+        //TODO 1.  moves the current branch's head to that commit node.
         //TODO 2. clear the staged area.
     }
 
