@@ -5,6 +5,7 @@ package gitlet;
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
 import java.util.List;
+import java.util.Map;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -26,7 +27,7 @@ public class Commit implements Serializable {
     /** The timestamp of this Commit. */
     private Date timestamp;
     /** The List for tracking files of this Commit. */
-    private List<String> blobs;
+    private Map<String, String> blobs;
     /** commit's parents */
     private List<String> parents;
 
@@ -44,12 +45,18 @@ public class Commit implements Serializable {
         return this.timestamp;
     }
 
-    public List<String> getBlobs() {
+    public Map<String, String> getBlobs() {
         return this.blobs;
     }
 
     public List<String> getParents() {
         return this.parents;
+    }
+
+    public boolean versionDiff(String filename, String fileHash) {
+        if (this.blobs == null) return true;
+        if (this.blobs.get(filename) != fileHash) return true;
+        return false;
     }
 
     /* TODO: fill in the rest of this class. */
