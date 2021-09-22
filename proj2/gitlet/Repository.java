@@ -66,7 +66,7 @@ public class Repository {
         Repository.makeAddFileDir();
         File addFile = join(TEST_DIR, filename);
         try {
-            byte[] addContent = readContents(addFile);
+            String addContent = readContentsAsString(addFile);
             String addHashCode = sha1(addContent);
             String repoContent = readContentsAsString(join(GITLET_DIR, "repo_info.txt"));
             String[] repoInfo = repoContent.split(" ");
@@ -74,19 +74,19 @@ public class Repository {
             ObjectInputStream inp = new ObjectInputStream(new FileInputStream(headFile));
             Commit headCommit = (Commit) inp.readObject();
             inp.close();
-            System.out.println(addHashCode);
-            if (headCommit.versionDiff(filename, addHashCode)) {
-                Files.copy(addFile.toPath(), join(ADDITION_DIR, addHashCode).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            } else {
 
+            File addBlobFile = join(ADDITION_DIR, filename);
+            if (headCommit.versionDiff(filename, addHashCode)) {
+                Blob addBlob = new Blob(filename, addContent, addHashCode);
+                writeObject(addBlobFile, addBlob);
+                //Files.copy(addFile.toPath(), join(ADDITION_DIR, addHashCode).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } else if (addBlobFile.exists()) {
+                addBlobFile.delete();
             }
 
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Error message :" + e);
+            System.out.println("File does not exist.");
         }
-
-        //TODO check difference between CWD and Head commit.
-        //TODO based on change writing log. ps. commit can based on log to write changed files into Blobs Dir or Commit Dir.
     }
 
     private static void makeAddFileDir() {
