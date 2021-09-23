@@ -7,6 +7,8 @@ import java.util.Date; // TODO: You'll likely use this in this class
 import java.util.List;
 import java.util.Map;
 
+import static gitlet.Utils.sha1;
+
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
@@ -38,6 +40,13 @@ public class Commit implements Serializable {
         this.parents = null;
     }
 
+    public Commit(String message) {
+        this.message = message;
+        this.timestamp = new Date();
+        this.blobs = null;
+        this.parents = null;
+    }
+
     public String getMessage() {
         return this.message;
     }
@@ -57,6 +66,37 @@ public class Commit implements Serializable {
         if (this.blobs == null) return true;
         if (this.blobs.get(filename) != fileHash) return true;
         return false;
+    }
+
+    public void setBlobs(Blob[] blobs) {
+        for (int i = 0; i < blobs.length; i++) {
+            this.blobs.put(blobs[i].getFileName(), blobs[i].getHashCode());
+        }
+    }
+
+    public void setParents(String commit) {
+        this.parents.add(commit);
+    }
+
+
+    public String getCommitSha1() {
+        String[] commitInfo = new String[this.blobs.size() + this.parents.size() + 2];
+        int index = 0;
+        commitInfo[index] = this.message;
+        index++;
+        commitInfo[index] =  this.timestamp.toString();
+        index++;
+        for (String key : blobs.keySet()) {
+            commitInfo[index] = blobs.get(key);
+            index++;
+        }
+        for (String s : parents) {
+            commitInfo[index] = s;
+            index++;
+        }
+
+        String hashCode = sha1(commitInfo);
+        return hashCode;
     }
 
     /* TODO: fill in the rest of this class. */
