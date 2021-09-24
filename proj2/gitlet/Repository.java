@@ -120,6 +120,11 @@ public class Repository {
         String hashCode = curCommit.getCommitSha1();
         File curCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(curCommitFile, curCommit);
+        for (Blob b : addBlobs) {
+            join(ADDITION_DIR, b.getFileName()).delete();
+            File BlobsFile = join(BLOBS_DIR, b.getHashCode());
+            writeObject(BlobsFile, b.getHashCode());
+        }
         setRepoInfo(repoInfo[0], hashCode);
     }
 

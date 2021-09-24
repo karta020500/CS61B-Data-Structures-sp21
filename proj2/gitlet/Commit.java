@@ -3,9 +3,7 @@ package gitlet;
 // TODO: any imports you need here
 
 import java.io.Serializable;
-import java.util.Date; // TODO: You'll likely use this in this class
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static gitlet.Utils.sha1;
 
@@ -69,33 +67,34 @@ public class Commit implements Serializable {
     }
 
     public void setBlobs(Blob[] blobs) {
+        if (this.blobs == null) this.blobs = new HashMap<>();
         for (int i = 0; i < blobs.length; i++) {
             this.blobs.put(blobs[i].getFileName(), blobs[i].getHashCode());
         }
     }
 
     public void setParents(String commit) {
+        if (this.parents == null) this.parents = new ArrayList<>();
         this.parents.add(commit);
     }
 
 
     public String getCommitSha1() {
-        String[] commitInfo = new String[this.blobs.size() + this.parents.size() + 2];
-        int index = 0;
-        commitInfo[index] = this.message;
-        index++;
-        commitInfo[index] =  this.timestamp.toString();
-        index++;
-        for (String key : blobs.keySet()) {
-            commitInfo[index] = blobs.get(key);
-            index++;
-        }
-        for (String s : parents) {
-            commitInfo[index] = s;
-            index++;
+        StringBuilder commitInfo = new StringBuilder();
+
+        commitInfo.append(this.message);
+        commitInfo.append(this.timestamp.toString());
+
+        for (String key : this.blobs.keySet()) {
+            commitInfo.append(this.blobs.get(key));
         }
 
-        String hashCode = sha1(commitInfo);
+        for (String s : this.parents) {
+            commitInfo.append(s);
+        }
+
+        String hashCode = sha1(commitInfo.toString());
+
         return hashCode;
     }
 
