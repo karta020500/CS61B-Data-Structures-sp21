@@ -43,15 +43,20 @@ public class Repository {
 
     /* TODO: fill in the rest of this class. */
     public static void init(){
+        // check is it initiating before.
         if (GITLET_DIR.exists()){
             System.out.print("A Gitlet version-control system already exists in the current directory. \n");
             System.exit(0);
         }
+
+        // create initial commit and persist it.
         Repository.makeInitFileDir();
         Commit initCommit = new Commit();
         String hashCode = sha1(initCommit.getMessage(), initCommit.getTimestamp().toString());
         File initCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(initCommitFile, initCommit);
+
+        // documenting the repository information.
         setRepoInfo("master", hashCode);
     }
 
@@ -64,17 +69,21 @@ public class Repository {
     public static void add(String filename) {
         Repository.makeAddFileDir();
         File addFile = join(TEST_DIR, filename);
+
+        // check file exists in CWD.
         if (!addFile.exists()){
             System.out.print("File does not exist. \n");
             System.exit(0);
         }
 
+        // extract head data and compute adding file hashcode.
         String addContent = readContentsAsString(addFile);
         String addHashCode = sha1(addContent);
         String[] repoInfo = getRepoInfo();
         File headFile = join(COMMITS_DIR, repoInfo[1]);
         Commit headCommit = readObject(headFile, Commit.class);
 
+        // compare the differences between head file version and adding file version based on hashcode.
         File addBlobFile = join(ADDITION_DIR, filename);
         if (headCommit.versionDiff(filename, addHashCode)) {
             Blob addBlob = new Blob(filename, addContent, addHashCode);
@@ -82,7 +91,6 @@ public class Repository {
         } else if (addBlobFile.exists()) {
             addBlobFile.delete();
         }
-
     }
 
     private static String[] getRepoInfo() {
@@ -104,11 +112,14 @@ public class Repository {
     public static void commit(String message) {
         Commit curCommit = new Commit(message);
         File[] filesList = ADDITION_DIR.listFiles();
+
+        // check staging area have file.
         if (filesList.length == 0) {
             System.out.print("No changes added to the commit. \n");
             System.exit(0);
         }
 
+        // read files from staging area and set data to current commit.
         Blob[] addBlobs = new Blob[filesList.length];
         for (int i = 0; i < filesList.length; i++) {
             addBlobs[i] = readObject(filesList[i], Blob.class);
@@ -117,6 +128,7 @@ public class Repository {
         String[] repoInfo = getRepoInfo();
         curCommit.setParents(repoInfo[1]);
 
+        // data persistence and clear staging area.
         String hashCode = curCommit.getCommitSha1();
         File curCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(curCommitFile, curCommit);
@@ -125,6 +137,8 @@ public class Repository {
             File BlobsFile = join(BLOBS_DIR, b.getHashCode());
             writeObject(BlobsFile, b.getHashCode());
         }
+
+        // forwarding the head.
         setRepoInfo(repoInfo[0], hashCode);
     }
 
