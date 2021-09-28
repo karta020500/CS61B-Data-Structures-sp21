@@ -12,6 +12,11 @@ public class Blob implements Serializable {
         this.content = content;
         this.hashCode = hashCode;
     }
+    public Blob(String fileName, String hashCode) {
+        this.fileName = fileName;
+        this.content = null;
+        this.hashCode = hashCode;
+    }
 
     public String getFileName() {
         return fileName;

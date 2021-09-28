@@ -1,13 +1,6 @@
 package gitlet;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import java.util.Scanner;
 
 import static gitlet.Utils.*;
 
@@ -38,6 +31,8 @@ public class Repository {
     public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
     /** The stage for addition directory*/
     public static final File ADDITION_DIR = join(GITLET_DIR, "addition");
+    /** The stage for removal directory*/
+    public static final File REMOVAL_DIR = join(GITLET_DIR, "removal");
     /** The test directory*/
     public static final File TEST_DIR = join(CWD, "test");
 
@@ -93,6 +88,12 @@ public class Repository {
         }
     }
 
+    private static Commit getHeadCommit() {
+        String[] repoInfo = getRepoInfo();
+        File headFile = join(COMMITS_DIR, repoInfo[1]);
+        return readObject(headFile, Commit.class);
+    }
+
     private static String[] getRepoInfo() {
         String repoContent = readContentsAsString(join(GITLET_DIR, "repo_info.txt"));
         String[] repoInfo = repoContent.split(" ");
@@ -111,19 +112,14 @@ public class Repository {
 
     public static void commit(String message) {
         Commit curCommit = new Commit(message);
-        File[] filesList = ADDITION_DIR.listFiles();
 
+        Blob[] addBlobs = getAdditionBlobs();
         // check staging area have file.
-        if (filesList.length == 0) {
+        if (addBlobs.length == 0) {
             System.out.print("No changes added to the commit. \n");
             System.exit(0);
         }
-
         // read files from staging area and set data to current commit.
-        Blob[] addBlobs = new Blob[filesList.length];
-        for (int i = 0; i < filesList.length; i++) {
-            addBlobs[i] = readObject(filesList[i], Blob.class);
-        }
         curCommit.setBlobs(addBlobs);
         String[] repoInfo = getRepoInfo();
         curCommit.setParents(repoInfo[1]);
@@ -142,9 +138,44 @@ public class Repository {
         setRepoInfo(repoInfo[0], hashCode);
     }
 
-    public static void remove(String file) {
-        //TODO check whether it's staged for addition to decide remove from addition or not.
-        //TODO check If the file is tracked in the current commit, stage it for removal and make sure file didn't in CWD.
+    private static Blob[] getAdditionBlobs() {
+        File[] filesList = ADDITION_DIR.listFiles();
+
+        Blob[] addBlobs = new Blob[filesList.length];
+        for (int i = 0; i < filesList.length; i++) {
+            addBlobs[i] = readObject(filesList[i], Blob.class);
+        }
+        return addBlobs;
+    }
+
+    public static void remove(String filename) {
+        //check whether it's staged for addition to decide remove from addition or not.
+        if (searchFileFromPath(ADDITION_DIR, filename)) {
+            join(ADDITION_DIR, filename).delete();
+        }
+        //check If the file is tracked in the current commit, stage it for removal and make sure file didn't in CWD.
+        Commit headCommit = getHeadCommit();
+        if (headCommit.tracked(filename)) {
+            if (!REMOVAL_DIR.exists()) REMOVAL_DIR.mkdir();
+            //stage it for removal.
+            File removalBlobFile = join(REMOVAL_DIR, filename);
+            String removalHashCode = headCommit.getBlobs().get(filename);
+            Blob removalBlob = new Blob(filename, removalHashCode);
+            writeObject(removalBlobFile, removalBlob);
+
+            //remove the file from the working directory.
+            File cwdFile = join(TEST_DIR, filename);
+            if (cwdFile.exists()) cwdFile.delete();
+        }
+    }
+
+    private static boolean searchFileFromPath(File path, String filename) {
+        File[] filesList = path.listFiles();
+        if (filesList == null) return false;
+        for (File f : filesList) {
+            if (f.getName().equals(filename)) return true;
+        }
+        return false;
     }
 
     public static void log() {

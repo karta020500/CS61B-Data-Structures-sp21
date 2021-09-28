@@ -16,10 +16,25 @@ public class Main {
                 Repository.init();
                 break;
             case "add":
+                if (args.length < 2) {
+                    System.out.print("Please enter a file name for addition. \n");
+                    System.exit(0);
+                }
                 Repository.add(args[1]);
                 break;
             case "commit":
+                if (args.length < 2) {
+                    System.out.print("Please enter a commit message. \n");
+                    System.exit(0);
+                }
                 Repository.commit(args[1]);
+                break;
+            case "rm":
+                if (args.length < 2) {
+                    System.out.print("Please enter a file name for removal. \n");
+                    System.exit(0);
+                }
+                Repository.remove(args[1]);
                 break;
             // TODO: FILL THE REST IN
         }

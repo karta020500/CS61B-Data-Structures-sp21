@@ -98,5 +98,9 @@ public class Commit implements Serializable {
         return hashCode;
     }
 
+    public boolean tracked(String filename) {
+        return this.blobs.containsKey(filename);
+    }
+
     /* TODO: fill in the rest of this class. */
 }
