@@ -66,10 +66,10 @@ public class Commit implements Serializable {
         return false;
     }
 
-    public void setBlobs(Blob[] blobs) {
+    public void setBlobs(Blob[] addBlobs) {
         if (this.blobs == null) this.blobs = new HashMap<>();
-        for (int i = 0; i < blobs.length; i++) {
-            this.blobs.put(blobs[i].getFileName(), blobs[i].getHashCode());
+        for (int i = 0; i < addBlobs.length; i++) {
+            this.blobs.put(addBlobs[i].getFileName(), addBlobs[i].getHashCode());
         }
     }
 
@@ -100,6 +100,14 @@ public class Commit implements Serializable {
 
     public boolean tracked(String filename) {
         return this.blobs.containsKey(filename);
+    }
+
+    public void removeBlobs(Blob[] rmBlobs) {
+
+        for (Blob b : rmBlobs) {
+            String rmKey = b.getFileName();
+            if (this.blobs.containsKey(rmKey)) blobs.remove(rmKey);
+        }
     }
 
     /* TODO: fill in the rest of this class. */

@@ -113,14 +113,20 @@ public class Repository {
     public static void commit(String message) {
         Commit curCommit = new Commit(message);
 
-        Blob[] addBlobs = getAdditionBlobs();
+        Blob[] addBlobs = retrieveBlobs(ADDITION_DIR);
+        Blob[] rmBlobs = retrieveBlobs(REMOVAL_DIR);
         // check staging area have file.
-        if (addBlobs.length == 0) {
+        if (addBlobs.length == 0 && rmBlobs.length == 0) {
             System.out.print("No changes added to the commit. \n");
             System.exit(0);
         }
         // read files from staging area and set data to current commit.
         curCommit.setBlobs(addBlobs);
+
+        // read files from removal area and remove the files in current commit.
+        curCommit.removeBlobs(rmBlobs);
+
+        //set parents to current commit.
         String[] repoInfo = getRepoInfo();
         curCommit.setParents(repoInfo[1]);
 
@@ -133,19 +139,23 @@ public class Repository {
             File BlobsFile = join(BLOBS_DIR, b.getHashCode());
             writeObject(BlobsFile, b.getHashCode());
         }
+        for (Blob b : rmBlobs) {
+            join(REMOVAL_DIR, b.getFileName()).delete();
+        }
 
         // forwarding the head.
         setRepoInfo(repoInfo[0], hashCode);
     }
 
-    private static Blob[] getAdditionBlobs() {
-        File[] filesList = ADDITION_DIR.listFiles();
 
-        Blob[] addBlobs = new Blob[filesList.length];
+    private static Blob[] retrieveBlobs(File path) {
+        File[] filesList = path.listFiles();
+
+        Blob[] Blobs = new Blob[filesList.length];
         for (int i = 0; i < filesList.length; i++) {
-            addBlobs[i] = readObject(filesList[i], Blob.class);
+            Blobs[i] = readObject(filesList[i], Blob.class);
         }
-        return addBlobs;
+        return Blobs;
     }
 
     public static void remove(String filename) {
