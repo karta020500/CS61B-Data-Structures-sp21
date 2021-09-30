@@ -30,12 +30,15 @@ public class Commit implements Serializable {
     private Map<String, String> blobs;
     /** commit's parents */
     private List<String> parents;
+    /** commit's parents */
+    private String hashCode;
 
     public Commit() {
         this.message = "initial commit";
         this.timestamp = new Date(0);
         this.blobs = null;
         this.parents = null;
+        this.hashCode = null;
     }
 
     public Commit(String message) {
@@ -43,6 +46,7 @@ public class Commit implements Serializable {
         this.timestamp = new Date();
         this.blobs = null;
         this.parents = null;
+        this.hashCode = null;
     }
 
     public String getMessage() {
@@ -108,6 +112,14 @@ public class Commit implements Serializable {
             String rmKey = b.getFileName();
             if (this.blobs.containsKey(rmKey)) blobs.remove(rmKey);
         }
+    }
+
+    public void setHashCode(String hashCode) {
+        this.hashCode = hashCode;
+    }
+
+    public String getHashCode() {
+        return hashCode;
     }
 
     /* TODO: fill in the rest of this class. */

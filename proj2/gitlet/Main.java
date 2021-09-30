@@ -36,6 +36,16 @@ public class Main {
                 }
                 Repository.remove(args[1]);
                 break;
+            case "log":
+                Repository.log();
+            case "global-log":
+                Repository.globalLog();
+            case "find":
+                if (args.length < 2) {
+                    System.out.print("Please enter a commit message. \n");
+                    System.exit(0);
+                }
+                Repository.find(args[1]);
             // TODO: FILL THE REST IN
         }
     }

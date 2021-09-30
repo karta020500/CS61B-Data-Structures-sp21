@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.*;
+import java.util.List;
 
 import static gitlet.Utils.*;
 
@@ -48,6 +49,7 @@ public class Repository {
         Repository.makeInitFileDir();
         Commit initCommit = new Commit();
         String hashCode = sha1(initCommit.getMessage(), initCommit.getTimestamp().toString());
+        initCommit.setHashCode(hashCode);
         File initCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(initCommitFile, initCommit);
 
@@ -90,7 +92,11 @@ public class Repository {
 
     private static Commit getHeadCommit() {
         String[] repoInfo = getRepoInfo();
-        File headFile = join(COMMITS_DIR, repoInfo[1]);
+        return retrieveCommit(repoInfo[1]);
+    }
+
+    private static Commit retrieveCommit(String hashCode) {
+        File headFile = join(COMMITS_DIR, hashCode);
         return readObject(headFile, Commit.class);
     }
 
@@ -132,6 +138,7 @@ public class Repository {
 
         // data persistence and clear staging area.
         String hashCode = curCommit.getCommitSha1();
+        curCommit.setHashCode(hashCode);
         File curCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(curCommitFile, curCommit);
         for (Blob b : addBlobs) {
@@ -189,17 +196,60 @@ public class Repository {
     }
 
     public static void log() {
-        //TODO display information about each commit backwards along the commit tree until the initial commit to console.
-        //Note: may include merge.
+        printBranchCommitTree(getHeadCommit());
     }
 
+    private static void printBranchCommitTree(Commit head) {
+        if (head.getParents() == null || head.getParents().size() == 1){
+            printCommitInfo(head);
+        } else {
+            printMergeInfo(head);
+        }
+        if (head.getParents() != null) {
+            printBranchCommitTree(retrieveCommit(head.getParents().get(0)));
+        }
+    }
+
+    private static void printCommitInfo(Commit com) {
+        System.out.println(
+                "=== \n" +
+                "Commit " + com.getHashCode() + "\n" +
+                "Date: " + com.getTimestamp() + "\n" +
+                com.getMessage() + "\n");
+    }
+
+    private static void printMergeInfo(Commit com) {
+        String parent1 = com.getParents().get(0).substring(0, 8);
+        String parent2 = com.getParents().get(1).substring(0, 8);
+        System.out.println(
+                "=== \n" +
+                        "Commit " + com.getHashCode() + "\n" +
+                        "Merge: " + parent1 + " " + parent2 + "\n" +
+                        "Date: " + com.getTimestamp() + "\n" +
+                        com.getMessage()+ "\n");
+    }
+
+
     public static void globalLog() {
-        //TODO displays information about all commits ever made.
-        //Note: order is not important.
+        printCommitTree(getHeadCommit());
+    }
+
+    private static void printCommitTree(Commit head) {
+        if (head.getParents() == null || head.getParents().size() == 1) {
+            printCommitInfo(head);
+            if (head.getParents() != null) {
+                printCommitTree(retrieveCommit(head.getParents().get(0)));
+            }
+        } else {
+            printMergeInfo(head);
+            printCommitTree(retrieveCommit(head.getParents().get(0)));
+            printCommitTree(retrieveCommit(head.getParents().get(1)));
+        }
     }
 
     public static void find(String message) {
         //TODO search for matched commit based on input commit message.
+
     }
 
     public static void status() {
