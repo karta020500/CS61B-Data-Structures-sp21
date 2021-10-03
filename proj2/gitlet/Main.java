@@ -46,6 +46,31 @@ public class Main {
                     System.exit(0);
                 }
                 Repository.find(args[1]);
+            case "status":
+                Repository.status();
+            case "checkout":
+                int argLength = args.length;
+                switch (argLength) {
+                    case 2:
+                        Repository.checkoutBranch(args[1]);
+                    case 3:
+                        Repository.checkoutFile(args[2]);
+                    case 4:
+                        Repository.checkoutFileFromId(args[1], args[3]);
+                }
+            case "branch":
+                if (args.length < 2) {
+                    System.out.print("Please enter a branch name. \n");
+                    System.exit(0);
+                }
+                Repository.branch(args[1]);
+            case "rm-branch":
+                if (args.length < 2) {
+                    System.out.print("Please enter a branch name. \n");
+                    System.exit(0);
+                }
+                Repository.removeBranch(args[1]);
+
             // TODO: FILL THE REST IN
         }
     }

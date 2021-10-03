@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 import static gitlet.Utils.*;
@@ -55,6 +56,7 @@ public class Repository {
 
         // documenting the repository information.
         setRepoInfo("master", hashCode);
+        setBranchInfo("master");
     }
 
     private static void makeInitFileDir() {
@@ -100,15 +102,79 @@ public class Repository {
         return readObject(headFile, Commit.class);
     }
 
+    private static Blob retrieveBlob(String hashCode) {
+        File headFile = join(BLOBS_DIR, hashCode);
+        return readObject(headFile, Blob.class);
+    }
+
     private static String[] getRepoInfo() {
         String repoContent = readContentsAsString(join(GITLET_DIR, "repo_info.txt"));
         String[] repoInfo = repoContent.split(" ");
         return repoInfo;
     }
 
+    private static String getBranchInfo() {
+        return readContentsAsString(join(GITLET_DIR, "branch_info.txt"));
+    }
+
     private static void setRepoInfo(String branch, String hashCode) {
         File f = new File(GITLET_DIR, "repo_info.txt");
-        Utils.writeContents(f, branch + " " + hashCode);
+        String[] repoInfo = getRepoInfo();
+        if (repoInfo.length == 0) {
+            Utils.writeContents(f, branch + " " + hashCode + " ");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < repoInfo.length; i+=2) {
+                sb.append(repoInfo[i]);
+                sb.append(" ");
+                if (repoInfo[i].equals(branch)) {
+                    sb.append(hashCode);
+                } else {
+                    sb.append(repoInfo[i+1]);
+                }
+                sb.append(" ");
+            }
+            Utils.writeContents(f, sb.toString());
+        }
+    }
+
+    private static void addRepoInfo(String branch) {
+        File f = new File(GITLET_DIR, "repo_info.txt");
+        String[] repoInfo = getRepoInfo();
+        StringBuilder sb = new StringBuilder();
+        String currBranch = getBranchInfo();
+        String currBranchHead = "";
+        for (int i = 0; i < repoInfo.length; i+=2) {
+            if (repoInfo[i].equals(currBranch)) currBranchHead = repoInfo[i+1];
+            sb.append(repoInfo[i]);
+            sb.append(" ");
+            sb.append(repoInfo[i+1]);
+            sb.append(" ");
+        }
+        sb.append(branch);
+        sb.append(" ");
+        sb.append(currBranchHead);
+        sb.append(" ");
+        Utils.writeContents(f, sb.toString());
+    }
+
+    private static void deleteRepoInfo(String branch) {
+        File f = new File(GITLET_DIR, "repo_info.txt");
+        String[] repoInfo = getRepoInfo();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < repoInfo.length; i+=2) {
+            if (repoInfo[i].equals(branch)) continue;
+            sb.append(repoInfo[i]);
+            sb.append(" ");
+            sb.append(repoInfo[i+1]);
+            sb.append(" ");
+        }
+        Utils.writeContents(f, sb.toString());
+    }
+
+    private static void setBranchInfo(String branch) {
+        File f = new File(GITLET_DIR, "branch_info.txt");
+        Utils.writeContents(f, branch);
     }
 
     private static void makeAddFileDir() {
@@ -249,26 +315,124 @@ public class Repository {
 
     public static void find(String message) {
         //TODO search for matched commit based on input commit message.
+        Commit[] commits = retrieveCommits();
+        List<String> matchedId = new ArrayList<>();
+        for (Commit commit : commits) {
+            if (commit.getMessage().indexOf(message) > 0) matchedId.add(commit.getCommitSha1());
+        }
+        if (matchedId.size() == 0) {
+            System.out.print("Found no commit with that message. \n");
+            System.exit(0);
+        }
+        for (String s : matchedId) {
+            System.out.println(s + "\n");
+        }
+    }
 
+    private static Commit[] retrieveCommits() {
+        File[] filesList = COMMITS_DIR.listFiles();
+
+        Commit[] commits = new Commit[filesList.length];
+        for (int i = 0; i < filesList.length; i++) {
+            commits[i] = readObject(filesList[i], Commit.class);
+        }
+        return commits;
     }
 
     public static void status() {
         //TODO show ropo status including branches, staged file, removed file.
         //Note: should maintain one text file to tracking those info.
+
+        System.out.println("=== Branches === \n");
+
+        String currBranch = getBranchInfo();
+        String[] repoInfo = getRepoInfo();
+
+        for (int i = 0; i < repoInfo.length; i+=2) {
+            if (repoInfo[i].equals(currBranch)) {
+                System.out.println("*"+repoInfo[i]+"\n");
+            } else {
+                System.out.println(repoInfo[i]+"\n");
+            }
+        }
+
+        System.out.println("=== Staged Files === \n");
+        Blob[] blobs = retrieveBlobs(ADDITION_DIR);
+        for (Blob b : blobs) {
+            System.out.println(b.getFileName()+"\n");
+        }
+
+        System.out.println("=== Removed Files === \n");
+        blobs = retrieveBlobs(REMOVAL_DIR);
+        for (Blob b : blobs) {
+            System.out.println(b.getFileName()+"\n");
+        }
     }
 
-    public static void checkout(String file, String commitId, String branchName) {
+    public static void checkoutFile(String filename) {
         //TODO 1. takes version of the file to CWD from head of branch.
+        checkout(getHeadCommit(), filename);
+    }
+
+    public static void checkoutFileFromId(String commitId, String filename) {
         //TODO 2. takes version of the file to CWD from specific commit.
+        checkout(retrieveCommit(commitId), filename);
+    }
+
+    public static void checkoutBranch(String branchName) {
         //TODO 3. takes all the file to CWD from the specific branch head of commit.
+        String[] repoInfo = getRepoInfo();
+        String branchHeadHash = "";
+        for (int i = 0; i < repoInfo.length; i++) {
+            if (repoInfo[i].equals(branchName)) branchHeadHash = repoInfo[i+1];
+        }
+        Commit version = retrieveCommit(branchHeadHash);
+
+        for (String s : version.getBlobs().keySet()) {
+            checkout(version, s);
+        }
+        setBranchInfo(branchName);
+    }
+    private static void checkout(Commit version, String filename) {
+        String targetBlobHash = "";
+        for (String s : version.getBlobs().keySet()) {
+            if (s.equals(filename)) targetBlobHash = version.getBlobs().get(s);
+        }
+        Blob targetBlob = retrieveBlob(targetBlobHash);
+        File cwdFile = join(TEST_DIR, targetBlob.getFileName());
+        writeContents(cwdFile, targetBlob.getContent());
     }
 
     public static void branch(String branchName) {
         //TODO 1. use a file to record each branch with a corresponding commit.
+        if (checkBranchExist(branchName)) {
+            System.out.print("A branch with that name already exists. \n");
+            System.exit(0);
+        }
+        addRepoInfo(branchName);
     }
 
     public static void removeBranch(String branchName) {
         //TODO 1. delete data related to specified branch name in the branch file.
+        if (!checkBranchExist(branchName)) {
+            System.out.print("A branch with that name does not exist. \n");
+            System.exit(0);
+        }
+        if (branchName.equals(getBranchInfo())) {
+            System.out.print("Cannot remove the current branch. \n");
+            System.exit(0);
+        }
+        deleteRepoInfo(branchName);
+    }
+
+    private static boolean checkBranchExist(String branchName) {
+        String[] repoInfo = getRepoInfo();
+        for (int i = 0; i < repoInfo.length; i+=2) {
+            if (branchName.equals(repoInfo[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void reset(String commitId) {
