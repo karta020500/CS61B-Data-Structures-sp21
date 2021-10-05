@@ -30,8 +30,10 @@ public class Commit implements Serializable {
     private Map<String, String> blobs;
     /** commit's parents */
     private List<String> parents;
-    /** commit's parents */
+    /** commit's hashCode */
     private String hashCode;
+    /** commit's branch */
+    private String branch;
 
     public Commit() {
         this.message = "initial commit";
@@ -39,6 +41,7 @@ public class Commit implements Serializable {
         this.blobs = null;
         this.parents = null;
         this.hashCode = null;
+        this.branch = "master";
     }
 
     public Commit(String message) {
@@ -47,6 +50,7 @@ public class Commit implements Serializable {
         this.blobs = null;
         this.parents = null;
         this.hashCode = null;
+        this.branch = Repository.getBranchInfo();
     }
 
     public String getMessage() {
@@ -62,6 +66,10 @@ public class Commit implements Serializable {
 
     public List<String> getParents() {
         return this.parents;
+    }
+
+    public String getBranch() {
+        return branch;
     }
 
     public boolean versionDiff(String filename, String fileHash) {

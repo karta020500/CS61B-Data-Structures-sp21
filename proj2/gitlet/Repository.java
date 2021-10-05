@@ -2,7 +2,9 @@ package gitlet;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static gitlet.Utils.*;
 
@@ -113,7 +115,7 @@ public class Repository {
         return repoInfo;
     }
 
-    private static String getBranchInfo() {
+    public static String getBranchInfo() {
         return readContentsAsString(join(GITLET_DIR, "branch_info.txt"));
     }
 
@@ -438,7 +440,29 @@ public class Repository {
     public static void reset(String commitId) {
         //TODO 1.  moves the current branch's head to that commit node.
         //TODO 2. clear the staged area.
+        try {
+            Commit version = retrieveCommit(commitId);
+            if (!version.getBranch().equals(getBranchInfo())) {
+                System.out.print("No commit with that id exists. \n");
+                System.exit(0);
+            }
+            Set<String> set = new HashSet<>();
+            for (String s : version.getBlobs().keySet()) {
+                set.add(s);
+                checkout(version, s);
+            }
+            File[] filesList = TEST_DIR.listFiles();
+            assert filesList != null;
+            for (File f : filesList) {
+                if (!set.contains(f.getName())) f.delete();
+            }
+            setRepoInfo(getBranchInfo(), commitId);
+        } catch (NullPointerException e) {
+            System.out.print("No commit with that id exists. \n");
+            System.exit(0);
+        }
     }
+
 
     public static void merge(String branchName) {
     }
