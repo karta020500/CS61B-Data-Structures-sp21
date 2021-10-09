@@ -465,6 +465,18 @@ public class Repository {
 
 
     public static void merge(String branchName) {
+        //TODO 1. if LCA is the given branch we do noting just print message.
+        //TODO 2. if LCA is the current branch we fast-forward.
+
+        //main logic :
+        //TODO rule 1. modified in other but not head : Other.
+        //TODO rule 2. modified in head but not other : Head.
+        //TODO rule 3. modified in other and ead : 1. in same way : DNM 2. in diff way : conflict.
+        //TODO rule 4. not in split and other but in head : Head.
+        //TODO rule 5. not in split and head but in other : Other.
+        //TODO rule 6. unmodified in head but not present in other : Remove.
+        //TODO rule 7. unmodified in other but not present in head : Remain or Remove.
+        
     }
 
 }
