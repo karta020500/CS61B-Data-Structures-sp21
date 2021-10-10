@@ -1,10 +1,7 @@
 package gitlet;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -468,6 +465,16 @@ public class Repository {
         //TODO 1. if LCA is the given branch we do noting just print message.
         //TODO 2. if LCA is the current branch we fast-forward.
 
+        String headId = getBranchHeadId(getBranchInfo());
+        Commit head = retrieveCommit(headId);
+
+        String otherId = getBranchHeadId(branchName);
+        Commit other = retrieveCommit(otherId);
+        Commit splitPoint = getLatestCommonAncestor(head, other);
+
+        Map<String, String> headDiff = compareBlobs(splitPoint.getBlobs(), head.getBlobs());
+        Map<String, String> otherDiff = compareBlobs(splitPoint.getBlobs(), other.getBlobs());
+
         //main logic :
         //TODO rule 1. modified in other but not head : Other.
         //TODO rule 2. modified in head but not other : Head.
@@ -476,7 +483,101 @@ public class Repository {
         //TODO rule 5. not in split and head but in other : Other.
         //TODO rule 6. unmodified in head but not present in other : Remove.
         //TODO rule 7. unmodified in other but not present in head : Remain or Remove.
-        
+    }
+
+    private static String getBranchHeadId(String branchName) {
+        String headId = "";
+        String[] repoInfo = getRepoInfo();
+        for (int i = 0; i < repoInfo.length; i+=2) {
+            if (repoInfo[i].equals(branchName)) headId = repoInfo[i+1];
+        }
+
+        return headId;
+    }
+
+    private static Commit getLatestCommonAncestor(Commit c1, Commit c2) {
+        int depth1 = getCommitDepth(c1);
+        int depth2 = getCommitDepth(c2);
+
+        if (depth1 > depth2) {
+            int offset = depth1 - depth2, i = 0;
+            while (i < offset) {
+                c1 = retrieveCommit(c1.getParents().get(0));
+            }
+        } else if ((depth2 > depth1)) {
+            int offset = depth2 - depth1, i = 0;
+            while (i < offset) {
+                c2 = retrieveCommit(c2.getParents().get(0));
+            }
+        }
+
+        Set<String> set = new HashSet<>();
+        String lcaId = "";
+        while (c1 != null || c2 != null) {
+            for (String s : c1.getParents()) {
+                if (set.contains(s)) {
+                    lcaId = s;
+                    break;
+                } else {
+                    set.add(s);
+                }
+            }
+
+            for (String s : c2.getParents()) {
+                if (set.contains(s)) {
+                    lcaId = s;
+                    break;
+                } else {
+                    set.add(s);
+                }
+            }
+
+            c1 = retrieveCommit(c1.getParents().get(0));
+            c2 = retrieveCommit(c2.getParents().get(0));
+        }
+
+
+        return retrieveCommit(lcaId);
+    }
+
+    private static int getCommitDepth(Commit head) {
+        int depth = 0;
+        Commit curr = head;
+        while (curr != null) {
+            depth++;
+            String ancestorId = curr.getParents().get(0);
+            if (ancestorId == null) {
+                curr = null;
+            } else {
+                curr = retrieveCommit(ancestorId);
+            }
+        }
+
+        return depth;
+    }
+
+    private static Map<String, String> compareBlobs(Map<String, String> base, Map<String, String> other) {
+        Set<String> set = new HashSet<>();
+        Map<String, String> res = new HashMap<>();
+
+        for (String s : base.keySet()) {
+            set.add(s);
+        }
+        for (String s : other.keySet()) {
+            set.add(s);
+        }
+
+        for (String s : set) {
+            if (other.containsKey(s)) {
+                if (!other.get(s).equals(base.get(s))) { // modified in other or added in other
+                    res.put(s, other.get(s));
+                }
+            } else {                                    // removed in other
+                res.put(s, "");
+            }
+        }
+
+        return res;
     }
 
 }
