@@ -242,7 +242,7 @@ public class Repository {
             //stage it for removal.
             File removalBlobFile = join(REMOVAL_DIR, filename);
             String removalHashCode = headCommit.getBlobs().get(filename);
-            Blob removalBlob = new Blob(filename, removalHashCode);
+            Blob removalBlob = retrieveBlob(removalHashCode);
             writeObject(removalBlobFile, removalBlob);
 
             //remove the file from the working directory.
@@ -476,12 +476,8 @@ public class Repository {
         Map<String, String> otherDiff = compareBlobs(splitPoint.getBlobs(), other.getBlobs());
 
         Set<String> commitFileName = new HashSet<>();
-        for (String s : headDiff.keySet()) {
-            commitFileName.add(s);
-        }
-        for (String s : otherDiff.keySet()) {
-            commitFileName.add(s);
-        }
+        commitFileName.addAll(headDiff.keySet());
+        commitFileName.addAll(otherDiff.keySet());
 
         //main logic :
         //TODO rule 1. modified in other but not head : Other.
@@ -491,28 +487,38 @@ public class Repository {
         //TODO rule 5. not in split and head but in other : Other.
         //TODO rule 6. unmodified in head but not present in other : Remove.
         //TODO rule 7. unmodified in other but not present in head : Remain or Remove.
+        //Note : Result in Head should consider merge commit is base on head commit.
 
         for (String s : commitFileName) {
-            if (headDiff.containsKey(s) && otherDiff.containsKey(s)) { //rule 3.
-                if (headDiff.get(s).equals(otherDiff.get(s))) {
+            if (headDiff.containsKey(s) && otherDiff.containsKey(s)) {
+                if (!headDiff.get(s).equals(otherDiff.get(s))) {
                     //conflict
-                } else {
-                    // stage for addiction either of them.
+                    Blob headBlob = retrieveBlob(headDiff.get(s));
+                    Blob otherBlob = retrieveBlob(otherDiff.get(s));
+
+                    String conflictContent = "<<<<<<< HEAD /n"
+                            + headBlob.getContent() + "======= /n"
+                            + otherBlob.getContent() + ">>>>>>>";
+
+                    stageFile(s, conflictContent);
                 }
-            } else if (headDiff.containsKey(s)){  // rule 2, 4 and 7.
-                if (headDiff.get(s).equals("")) {
+            } else if (otherDiff.containsKey(s)){
+                if (otherDiff.get(s).equals("")) {
                     // stage for removal.
+                    remove(s);
                 } else {
                     //stage for addiction.
-                }
-            } else {
-                if (otherDiff.get(s).equals("")) {    // rule 1, 5 and 6.
-                    // stage for removal.
-                } else {
-                    //stage for addiction.
+                    Blob otherBlob = retrieveBlob(otherDiff.get(s));
+                    stageFile(s, otherBlob.getContent());
                 }
             }
         }
+    }
+
+    private static void stageFile(String filename, String fileContent) {
+        File addBlobFile = join(ADDITION_DIR, filename);
+        Blob addBlob = new Blob(filename, fileContent, sha1(fileContent));
+        writeObject(addBlobFile, addBlob);
     }
 
     private static String getBranchHeadId(String branchName) {
