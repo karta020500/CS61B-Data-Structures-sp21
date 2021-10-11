@@ -70,8 +70,18 @@ public class Main {
                     System.exit(0);
                 }
                 Repository.removeBranch(args[1]);
-
-            // TODO: FILL THE REST IN
+            case "reset":
+                if (args.length < 2) {
+                    System.out.print("Please enter a commit id. \n");
+                    System.exit(0);
+                }
+                Repository.reset(args[1]);
+            case "merge":
+                if (args.length < 2) {
+                    System.out.print("Please enter a branch name. \n");
+                    System.exit(0);
+                }
+                Repository.merge(args[1]);
         }
     }
 }

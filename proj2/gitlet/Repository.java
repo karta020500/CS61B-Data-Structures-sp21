@@ -182,7 +182,7 @@ public class Repository {
     }
 
     public static void commit(String message) {
-        Commit curCommit = new Commit(message);
+        Commit newCommit = getHeadCommit();
 
         Blob[] addBlobs = retrieveBlobs(ADDITION_DIR);
         Blob[] rmBlobs = retrieveBlobs(REMOVAL_DIR);
@@ -192,20 +192,22 @@ public class Repository {
             System.exit(0);
         }
         // read files from staging area and set data to current commit.
-        curCommit.setBlobs(addBlobs);
+        newCommit.setBlobs(addBlobs);
 
         // read files from removal area and remove the files in current commit.
-        curCommit.removeBlobs(rmBlobs);
+        newCommit.removeBlobs(rmBlobs);
 
-        //set parents to current commit.
-        String[] repoInfo = getRepoInfo();
-        curCommit.setParents(repoInfo[1]);
+        //set parents to current branch head commit.
+        newCommit.setParents(newCommit.getHashCode());
+
+        //set message.
+        newCommit.setMessage(message);
 
         // data persistence and clear staging area.
-        String hashCode = curCommit.getCommitSha1();
-        curCommit.setHashCode(hashCode);
+        String hashCode = newCommit.getCommitSha1();
+        newCommit.setHashCode(hashCode);
         File curCommitFile = join(COMMITS_DIR, hashCode);
-        writeObject(curCommitFile, curCommit);
+        writeObject(curCommitFile, newCommit);
         for (Blob b : addBlobs) {
             join(ADDITION_DIR, b.getFileName()).delete();
             File BlobsFile = join(BLOBS_DIR, b.getHashCode());
@@ -216,7 +218,7 @@ public class Repository {
         }
 
         // forwarding the head.
-        setRepoInfo(repoInfo[0], hashCode);
+        setRepoInfo(getBranchInfo(), hashCode);
     }
 
 
@@ -385,6 +387,7 @@ public class Repository {
         for (int i = 0; i < repoInfo.length; i++) {
             if (repoInfo[i].equals(branchName)) branchHeadHash = repoInfo[i+1];
         }
+
         Commit version = retrieveCommit(branchHeadHash);
 
         for (String s : version.getBlobs().keySet()) {
@@ -472,6 +475,17 @@ public class Repository {
         Commit other = retrieveCommit(otherId);
         Commit splitPoint = getLatestCommonAncestor(head, other);
 
+        if (splitPoint.getHashCode().equals(other.getHashCode())) {
+            System.out.print("Given branch is an ancestor of the current branch. \n");
+            System.exit(0);
+        }
+
+        if (splitPoint.getHashCode().equals(head.getHashCode())) {
+            checkoutBranch(branchName);
+            System.out.print("Current branch fast-forwarded. \n");
+            System.exit(0);
+        }
+
         Map<String, String> headDiff = compareBlobs(splitPoint.getBlobs(), head.getBlobs());
         Map<String, String> otherDiff = compareBlobs(splitPoint.getBlobs(), other.getBlobs());
 
@@ -489,15 +503,17 @@ public class Repository {
         //TODO rule 7. unmodified in other but not present in head : Remain or Remove.
         //Note : Result in Head should consider merge commit is base on head commit.
 
+        boolean conflictFlag = false;
         for (String s : commitFileName) {
             if (headDiff.containsKey(s) && otherDiff.containsKey(s)) {
                 if (!headDiff.get(s).equals(otherDiff.get(s))) {
                     //conflict
+                    conflictFlag = true;
                     Blob headBlob = retrieveBlob(headDiff.get(s));
                     Blob otherBlob = retrieveBlob(otherDiff.get(s));
 
-                    String conflictContent = "<<<<<<< HEAD /n"
-                            + headBlob.getContent() + "======= /n"
+                    String conflictContent = "<<<<<<< HEAD \n"
+                            + headBlob.getContent() + "======= \n"
                             + otherBlob.getContent() + ">>>>>>>";
 
                     stageFile(s, conflictContent);
@@ -513,6 +529,36 @@ public class Repository {
                 }
             }
         }
+        String mergeMessage = "Merged [" + branchName + "] into [" + getBranchInfo() + "].";
+        mergeCommit(mergeMessage, headId, otherId);
+        if (conflictFlag) System.out.print("Encountered a merge conflict. \n");
+    }
+
+    private static void mergeCommit(String message, String headId, String otherId) {
+        Commit newCommit = getHeadCommit();
+
+        Blob[] addBlobs = retrieveBlobs(ADDITION_DIR);
+        Blob[] rmBlobs = retrieveBlobs(REMOVAL_DIR);
+
+        newCommit.setBlobs(addBlobs);
+        newCommit.removeBlobs(rmBlobs);
+        newCommit.setParents(headId, otherId);
+        newCommit.setMessage(message);
+
+        String hashCode = newCommit.getCommitSha1();
+        newCommit.setHashCode(hashCode);
+        File curCommitFile = join(COMMITS_DIR, hashCode);
+        writeObject(curCommitFile, newCommit);
+        for (Blob b : addBlobs) {
+            join(ADDITION_DIR, b.getFileName()).delete();
+            File BlobsFile = join(BLOBS_DIR, b.getHashCode());
+            writeObject(BlobsFile, b.getHashCode());
+        }
+        for (Blob b : rmBlobs) {
+            join(REMOVAL_DIR, b.getFileName()).delete();
+        }
+
+        setRepoInfo(getBranchInfo(), hashCode);
     }
 
     private static void stageFile(String filename, String fileContent) {

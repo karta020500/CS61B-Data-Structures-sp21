@@ -85,9 +85,19 @@ public class Commit implements Serializable {
         }
     }
 
-    public void setParents(String commit) {
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setParents(String id) {
         if (this.parents == null) this.parents = new ArrayList<>();
-        this.parents.add(commit);
+        this.parents.add(id);
+    }
+
+    public void setParents(String id1, String id2) {
+        if (this.parents == null) this.parents = new ArrayList<>();
+        this.parents.add(id1);
+        this.parents.add(id2);
     }
 
 
