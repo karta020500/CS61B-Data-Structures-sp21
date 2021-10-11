@@ -475,6 +475,14 @@ public class Repository {
         Map<String, String> headDiff = compareBlobs(splitPoint.getBlobs(), head.getBlobs());
         Map<String, String> otherDiff = compareBlobs(splitPoint.getBlobs(), other.getBlobs());
 
+        Set<String> commitFileName = new HashSet<>();
+        for (String s : headDiff.keySet()) {
+            commitFileName.add(s);
+        }
+        for (String s : otherDiff.keySet()) {
+            commitFileName.add(s);
+        }
+
         //main logic :
         //TODO rule 1. modified in other but not head : Other.
         //TODO rule 2. modified in head but not other : Head.
@@ -483,6 +491,28 @@ public class Repository {
         //TODO rule 5. not in split and head but in other : Other.
         //TODO rule 6. unmodified in head but not present in other : Remove.
         //TODO rule 7. unmodified in other but not present in head : Remain or Remove.
+
+        for (String s : commitFileName) {
+            if (headDiff.containsKey(s) && otherDiff.containsKey(s)) { //rule 3.
+                if (headDiff.get(s).equals(otherDiff.get(s))) {
+                    //conflict
+                } else {
+                    // stage for addiction either of them.
+                }
+            } else if (headDiff.containsKey(s)){  // rule 2, 4 and 7.
+                if (headDiff.get(s).equals("")) {
+                    // stage for removal.
+                } else {
+                    //stage for addiction.
+                }
+            } else {
+                if (otherDiff.get(s).equals("")) {    // rule 1, 5 and 6.
+                    // stage for removal.
+                } else {
+                    //stage for addiction.
+                }
+            }
+        }
     }
 
     private static String getBranchHeadId(String branchName) {
@@ -569,7 +599,7 @@ public class Repository {
 
         for (String s : set) {
             if (other.containsKey(s)) {
-                if (!other.get(s).equals(base.get(s))) { // modified in other or added in other
+                if (!base.containsKey(s) || !other.get(s).equals(base.get(s))) { // modified in other or added in other
                     res.put(s, other.get(s));
                 }
             } else {                                    // removed in other
