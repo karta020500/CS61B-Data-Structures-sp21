@@ -54,7 +54,8 @@ public class Repository {
         writeObject(initCommitFile, initCommit);
 
         // documenting the repository information.
-        setRepoInfo("master", hashCode);
+        File f = new File(GITLET_DIR, "repo_info.txt");
+        Utils.writeContents(f, "master" + " " + hashCode + " ");
         setBranchInfo("master");
     }
 
@@ -92,8 +93,7 @@ public class Repository {
     }
 
     private static Commit getHeadCommit() {
-        String[] repoInfo = getRepoInfo();
-        return retrieveCommit(repoInfo[1]);
+        return retrieveCommit(getBranchHeadId(getBranchInfo()));
     }
 
     private static Commit retrieveCommit(String hashCode) {
@@ -119,22 +119,18 @@ public class Repository {
     private static void setRepoInfo(String branch, String hashCode) {
         File f = new File(GITLET_DIR, "repo_info.txt");
         String[] repoInfo = getRepoInfo();
-        if (repoInfo.length == 0) {
-            Utils.writeContents(f, branch + " " + hashCode + " ");
-        } else {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < repoInfo.length; i+=2) {
-                sb.append(repoInfo[i]);
-                sb.append(" ");
-                if (repoInfo[i].equals(branch)) {
-                    sb.append(hashCode);
-                } else {
-                    sb.append(repoInfo[i+1]);
-                }
-                sb.append(" ");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < repoInfo.length; i+=2) {
+            sb.append(repoInfo[i]);
+            sb.append(" ");
+            if (repoInfo[i].equals(branch)) {
+                sb.append(hashCode);
+            } else {
+                sb.append(repoInfo[i+1]);
             }
-            Utils.writeContents(f, sb.toString());
+            sb.append(" ");
         }
+        Utils.writeContents(f, sb.toString());
     }
 
     private static void addRepoInfo(String branch) {
@@ -187,16 +183,18 @@ public class Repository {
         Blob[] addBlobs = retrieveBlobs(ADDITION_DIR);
         Blob[] rmBlobs = retrieveBlobs(REMOVAL_DIR);
         // check staging area have file.
-        if (addBlobs.length == 0 && rmBlobs.length == 0) {
+        if (addBlobs == null && rmBlobs == null) {
             System.out.print("No changes added to the commit. \n");
             System.exit(0);
         }
         // read files from staging area and set data to current commit.
-        newCommit.setBlobs(addBlobs);
-
+        if (addBlobs != null) {
+            newCommit.setBlobs(addBlobs);
+        }
         // read files from removal area and remove the files in current commit.
-        newCommit.removeBlobs(rmBlobs);
-
+        if (rmBlobs != null) {
+            newCommit.removeBlobs(rmBlobs);
+        }
         //set parents to current branch head commit.
         newCommit.setParents(newCommit.getHashCode());
 
@@ -208,15 +206,18 @@ public class Repository {
         newCommit.setHashCode(hashCode);
         File curCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(curCommitFile, newCommit);
-        for (Blob b : addBlobs) {
-            join(ADDITION_DIR, b.getFileName()).delete();
-            File BlobsFile = join(BLOBS_DIR, b.getHashCode());
-            writeObject(BlobsFile, b.getHashCode());
+        if (addBlobs != null) {
+            for (Blob b : addBlobs) {
+                join(ADDITION_DIR, b.getFileName()).delete();
+                File BlobsFile = join(BLOBS_DIR, b.getHashCode());
+                writeObject(BlobsFile, b.getHashCode());
+            }
         }
-        for (Blob b : rmBlobs) {
-            join(REMOVAL_DIR, b.getFileName()).delete();
+        if (rmBlobs != null) {
+            for (Blob b : rmBlobs) {
+                join(REMOVAL_DIR, b.getFileName()).delete();
+            }
         }
-
         // forwarding the head.
         setRepoInfo(getBranchInfo(), hashCode);
     }
@@ -224,7 +225,7 @@ public class Repository {
 
     private static Blob[] retrieveBlobs(File path) {
         File[] filesList = path.listFiles();
-
+        if (filesList == null) return null;
         Blob[] Blobs = new Blob[filesList.length];
         for (int i = 0; i < filesList.length; i++) {
             Blobs[i] = readObject(filesList[i], Blob.class);
@@ -359,14 +360,18 @@ public class Repository {
 
         System.out.println("=== Staged Files === \n");
         Blob[] blobs = retrieveBlobs(ADDITION_DIR);
-        for (Blob b : blobs) {
-            System.out.println(b.getFileName()+"\n");
+        if (blobs != null) {
+            for (Blob b : blobs) {
+                System.out.println(b.getFileName()+"\n");
+            }
         }
 
         System.out.println("=== Removed Files === \n");
         blobs = retrieveBlobs(REMOVAL_DIR);
-        for (Blob b : blobs) {
-            System.out.println(b.getFileName()+"\n");
+        if (blobs != null) {
+            for (Blob b : blobs) {
+                System.out.println(b.getFileName()+"\n");
+            }
         }
     }
 
@@ -539,9 +544,12 @@ public class Repository {
 
         Blob[] addBlobs = retrieveBlobs(ADDITION_DIR);
         Blob[] rmBlobs = retrieveBlobs(REMOVAL_DIR);
-
-        newCommit.setBlobs(addBlobs);
-        newCommit.removeBlobs(rmBlobs);
+        if (addBlobs != null) {
+            newCommit.setBlobs(addBlobs);
+        }
+        if (rmBlobs != null) {
+            newCommit.removeBlobs(rmBlobs);
+        }
         newCommit.setParents(headId, otherId);
         newCommit.setMessage(message);
 
@@ -549,15 +557,18 @@ public class Repository {
         newCommit.setHashCode(hashCode);
         File curCommitFile = join(COMMITS_DIR, hashCode);
         writeObject(curCommitFile, newCommit);
-        for (Blob b : addBlobs) {
-            join(ADDITION_DIR, b.getFileName()).delete();
-            File BlobsFile = join(BLOBS_DIR, b.getHashCode());
-            writeObject(BlobsFile, b.getHashCode());
+        if (addBlobs != null) {
+            for (Blob b : addBlobs) {
+                join(ADDITION_DIR, b.getFileName()).delete();
+                File BlobsFile = join(BLOBS_DIR, b.getHashCode());
+                writeObject(BlobsFile, b.getHashCode());
+            }
         }
-        for (Blob b : rmBlobs) {
-            join(REMOVAL_DIR, b.getFileName()).delete();
+        if (rmBlobs != null) {
+            for (Blob b : rmBlobs) {
+                join(REMOVAL_DIR, b.getFileName()).delete();
+            }
         }
-
         setRepoInfo(getBranchInfo(), hashCode);
     }
 
