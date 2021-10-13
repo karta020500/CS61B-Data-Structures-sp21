@@ -210,7 +210,7 @@ public class Repository {
             for (Blob b : addBlobs) {
                 join(ADDITION_DIR, b.getFileName()).delete();
                 File BlobsFile = join(BLOBS_DIR, b.getHashCode());
-                writeObject(BlobsFile, b.getHashCode());
+                writeObject(BlobsFile, b);
             }
         }
         if (rmBlobs != null) {
