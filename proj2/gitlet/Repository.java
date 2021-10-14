@@ -34,8 +34,6 @@ public class Repository {
     public static final File ADDITION_DIR = join(GITLET_DIR, "addition");
     /** The stage for removal directory*/
     public static final File REMOVAL_DIR = join(GITLET_DIR, "removal");
-    /** The test directory*/
-    public static final File TEST_DIR = join(CWD, "test");
 
     /* TODO: fill in the rest of this class. */
     public static void init(){
@@ -67,7 +65,7 @@ public class Repository {
 
     public static void add(String filename) {
         Repository.makeAddFileDir();
-        File addFile = join(TEST_DIR, filename);
+        File addFile = join(CWD, filename);
 
         // check file exists in CWD.
         if (!addFile.exists()){
@@ -78,9 +76,7 @@ public class Repository {
         // extract head data and compute adding file hashcode.
         String addContent = readContentsAsString(addFile);
         String addHashCode = sha1(addContent);
-        String[] repoInfo = getRepoInfo();
-        File headFile = join(COMMITS_DIR, repoInfo[1]);
-        Commit headCommit = readObject(headFile, Commit.class);
+        Commit headCommit = getHeadCommit();
 
         // compare the differences between head file version and adding file version based on hashcode.
         File addBlobFile = join(ADDITION_DIR, filename);
@@ -174,7 +170,6 @@ public class Repository {
 
     private static void makeAddFileDir() {
         ADDITION_DIR.mkdir();
-        TEST_DIR.mkdir();
     }
 
     public static void commit(String message) {
@@ -224,13 +219,37 @@ public class Repository {
 
 
     private static Blob[] retrieveBlobs(File path) {
-        File[] filesList = path.listFiles();
-        if (filesList == null) return null;
-        Blob[] Blobs = new Blob[filesList.length];
-        for (int i = 0; i < filesList.length; i++) {
-            Blobs[i] = readObject(filesList[i], Blob.class);
+        File[] fileList = path.listFiles();
+        if (fileList == null) return null;
+        Blob[] Blobs = new Blob[fileList.length];
+        for (int i = 0; i < fileList.length; i++) {
+            Blobs[i] = readObject(fileList[i], Blob.class);
         }
         return Blobs;
+    }
+
+    private static boolean untrackFile() {
+        File[] fileList = CWD.listFiles();
+        Commit head = getHeadCommit();
+        if (fileList == null && head.getBlobs() != null || fileList != null && head.getBlobs() == null) {
+            return true;
+        } else if (fileList == null) {
+            return false;
+        }
+
+        if (head.getBlobs().size() != fileList.length) return true;
+
+        for (File f : fileList) {
+            Blob fileBlob = fileToBlob(f);
+            if (!head.getBlobs().get(fileBlob.getFileName()).equals(fileBlob.getHashCode())) return true;
+        }
+
+        return false;
+    }
+
+    private static Blob fileToBlob(File file) {
+        String content = readContentsAsString(file);
+        return new Blob(file.getName(), content, sha1(content));
     }
 
     public static void remove(String filename) {
@@ -249,7 +268,7 @@ public class Repository {
             writeObject(removalBlobFile, removalBlob);
 
             //remove the file from the working directory.
-            File cwdFile = join(TEST_DIR, filename);
+            File cwdFile = join(CWD, filename);
             if (cwdFile.exists()) cwdFile.delete();
         }
     }
@@ -382,15 +401,28 @@ public class Repository {
 
     public static void checkoutFileFromId(String commitId, String filename) {
         //TODO 2. takes version of the file to CWD from specific commit.
-        checkout(retrieveCommit(commitId), filename);
+        try {
+            checkout(retrieveCommit(commitId), filename);
+        } catch (IllegalArgumentException e) {
+            System.out.print("No commit with that id exists. \n");
+            System.exit(0);
+        }
     }
 
     public static void checkoutBranch(String branchName) {
         //TODO 3. takes all the file to CWD from the specific branch head of commit.
+        if (branchName.equals(getBranchInfo())) {
+            System.out.print("No need to checkout the current branch. \n");
+            System.exit(0);
+        }
         String[] repoInfo = getRepoInfo();
         String branchHeadHash = "";
         for (int i = 0; i < repoInfo.length; i++) {
             if (repoInfo[i].equals(branchName)) branchHeadHash = repoInfo[i+1];
+        }
+        if (branchHeadHash.equals("")) {
+            System.out.print("No such branch exists. \n");
+            System.exit(0);
         }
 
         Commit version = retrieveCommit(branchHeadHash);
@@ -401,12 +433,21 @@ public class Repository {
         setBranchInfo(branchName);
     }
     private static void checkout(Commit version, String filename) {
+        if (untrackFile()) {
+            System.out.print("There is an untracked file in the way; delete it, or add and commit it first. \n");
+            System.exit(0);
+        }
         String targetBlobHash = "";
         for (String s : version.getBlobs().keySet()) {
             if (s.equals(filename)) targetBlobHash = version.getBlobs().get(s);
         }
+        if (targetBlobHash.equals("")) {
+            System.out.print("File does not exist in that commit. \n");
+            System.exit(0);
+        }
+
         Blob targetBlob = retrieveBlob(targetBlobHash);
-        File cwdFile = join(TEST_DIR, targetBlob.getFileName());
+        File cwdFile = join(CWD, targetBlob.getFileName());
         writeContents(cwdFile, targetBlob.getContent());
     }
 
@@ -456,7 +497,7 @@ public class Repository {
                 set.add(s);
                 checkout(version, s);
             }
-            File[] filesList = TEST_DIR.listFiles();
+            File[] filesList = CWD.listFiles();
             assert filesList != null;
             for (File f : filesList) {
                 if (!set.contains(f.getName())) f.delete();

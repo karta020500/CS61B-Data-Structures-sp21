@@ -73,15 +73,14 @@ public class Commit implements Serializable {
     }
 
     public boolean versionDiff(String filename, String fileHash) {
-        if (this.blobs == null) return true;
-        if (this.blobs.get(filename) != fileHash) return true;
+        if (this.blobs == null || !this.blobs.get(filename).equals(fileHash)) return true;
         return false;
     }
 
     public void setBlobs(Blob[] addBlobs) {
         if (this.blobs == null) this.blobs = new HashMap<>();
-        for (int i = 0; i < addBlobs.length; i++) {
-            this.blobs.put(addBlobs[i].getFileName(), addBlobs[i].getHashCode());
+        for (Blob addBlob : addBlobs) {
+            this.blobs.put(addBlob.getFileName(), addBlob.getHashCode());
         }
     }
 
