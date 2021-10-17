@@ -73,7 +73,8 @@ public class Commit implements Serializable {
     }
 
     public boolean versionDiff(String filename, String fileHash) {
-        if (this.blobs == null || !this.blobs.get(filename).equals(fileHash)) return true;
+        if (this.blobs == null) return true;
+        if (!this.blobs.containsKey(filename) || !this.blobs.get(filename).equals(fileHash)) return true;
         return false;
     }
 
@@ -91,6 +92,14 @@ public class Commit implements Serializable {
     public void setParents(String id) {
         if (this.parents == null) this.parents = new ArrayList<>();
         this.parents.add(id);
+    }
+
+    public void setCurrTimestamp() {
+        this.timestamp = new Date();
+    }
+
+    public void resetParents() {
+        this.parents = null;
     }
 
     public void setParents(String id1, String id2) {

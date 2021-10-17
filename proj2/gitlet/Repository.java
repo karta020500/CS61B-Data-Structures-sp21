@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -182,6 +183,7 @@ public class Repository {
             System.out.print("No changes added to the commit. \n");
             System.exit(0);
         }
+        newCommit.setCurrTimestamp();
         // read files from staging area and set data to current commit.
         if (addBlobs != null) {
             newCommit.setBlobs(addBlobs);
@@ -191,6 +193,7 @@ public class Repository {
             newCommit.removeBlobs(rmBlobs);
         }
         //set parents to current branch head commit.
+        newCommit.resetParents();
         newCommit.setParents(newCommit.getHashCode());
 
         //set message.
@@ -228,38 +231,22 @@ public class Repository {
         return Blobs;
     }
 
-    private static boolean untrackFile() {
-        File[] fileList = CWD.listFiles();
-        Commit head = getHeadCommit();
-        if (fileList == null && head.getBlobs() != null || fileList != null && head.getBlobs() == null) {
-            return true;
-        } else if (fileList == null) {
-            return false;
-        }
-
-        if (head.getBlobs().size() != fileList.length) return true;
-
-        for (File f : fileList) {
-            Blob fileBlob = fileToBlob(f);
-            if (!head.getBlobs().get(fileBlob.getFileName()).equals(fileBlob.getHashCode())) return true;
-        }
-
-        return false;
-    }
-
     private static Blob fileToBlob(File file) {
         String content = readContentsAsString(file);
         return new Blob(file.getName(), content, sha1(content));
     }
 
     public static void remove(String filename) {
+        boolean printMsg = true;
         //check whether it's staged for addition to decide remove from addition or not.
         if (searchFileFromPath(ADDITION_DIR, filename)) {
             join(ADDITION_DIR, filename).delete();
+            printMsg = false;
         }
         //check If the file is tracked in the current commit, stage it for removal and make sure file didn't in CWD.
         Commit headCommit = getHeadCommit();
         if (headCommit.tracked(filename)) {
+            printMsg = false;
             if (!REMOVAL_DIR.exists()) REMOVAL_DIR.mkdir();
             //stage it for removal.
             File removalBlobFile = join(REMOVAL_DIR, filename);
@@ -270,6 +257,9 @@ public class Repository {
             //remove the file from the working directory.
             File cwdFile = join(CWD, filename);
             if (cwdFile.exists()) cwdFile.delete();
+        }
+        if (printMsg) {
+            System.out.print("No reason to remove the file. \n");
         }
     }
 
@@ -289,7 +279,7 @@ public class Repository {
     private static void printBranchCommitTree(Commit head) {
         if (head.getParents() == null || head.getParents().size() == 1){
             printCommitInfo(head);
-        } else {
+        } else if (head.getParents().size() >= 2){
             printMergeInfo(head);
         }
         if (head.getParents() != null) {
@@ -298,10 +288,11 @@ public class Repository {
     }
 
     private static void printCommitInfo(Commit com) {
+        SimpleDateFormat sdFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z");
         System.out.println(
                 "=== \n" +
                 "Commit " + com.getHashCode() + "\n" +
-                "Date: " + com.getTimestamp() + "\n" +
+                "Date: " + sdFormat.format(com.getTimestamp()) + "\n" +
                 com.getMessage() + "\n");
     }
 
@@ -428,15 +419,19 @@ public class Repository {
         Commit version = retrieveCommit(branchHeadHash);
 
         for (String s : version.getBlobs().keySet()) {
+            File curFile = join(CWD, s);
+            if (curFile.exists()) {
+                String content = readContentsAsString(curFile);
+                if (version.versionDiff(s, sha1(content))) {
+                    System.out.print("There is an untracked file in the way; delete it, or add and commit it first. \n");
+                    System.exit(0);
+                }
+            }
             checkout(version, s);
         }
         setBranchInfo(branchName);
     }
     private static void checkout(Commit version, String filename) {
-        if (untrackFile()) {
-            System.out.print("There is an untracked file in the way; delete it, or add and commit it first. \n");
-            System.exit(0);
-        }
         String targetBlobHash = "";
         for (String s : version.getBlobs().keySet()) {
             if (s.equals(filename)) targetBlobHash = version.getBlobs().get(s);
