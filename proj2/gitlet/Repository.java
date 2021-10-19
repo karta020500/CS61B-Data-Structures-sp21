@@ -5,11 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static gitlet.Utils.*;
-
-// TODO: any imports you need here
-
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
+ *
  *  does at a high level.
  *
  *  @author TODO
@@ -288,10 +285,10 @@ public class Repository {
     }
 
     private static void printCommitInfo(Commit com) {
-        SimpleDateFormat sdFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z");
+        SimpleDateFormat sdFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
         System.out.println(
                 "=== \n" +
-                "Commit " + com.getHashCode() + "\n" +
+                "commit " + com.getHashCode() + "\n" +
                 "Date: " + sdFormat.format(com.getTimestamp()) + "\n" +
                 com.getMessage() + "\n");
     }
@@ -301,7 +298,7 @@ public class Repository {
         String parent2 = com.getParents().get(1).substring(0, 8);
         System.out.println(
                 "=== \n" +
-                        "Commit " + com.getHashCode() + "\n" +
+                        "commit " + com.getHashCode() + "\n" +
                         "Merge: " + parent1 + " " + parent2 + "\n" +
                         "Date: " + com.getTimestamp() + "\n" +
                         com.getMessage()+ "\n");
@@ -352,7 +349,6 @@ public class Repository {
     }
 
     public static void status() {
-        //TODO show ropo status including branches, staged file, removed file.
         //Note: should maintain one text file to tracking those info.
 
         System.out.println("=== Branches === \n");
@@ -386,12 +382,10 @@ public class Repository {
     }
 
     public static void checkoutFile(String filename) {
-        //TODO 1. takes version of the file to CWD from head of branch.
         checkout(getHeadCommit(), filename);
     }
 
     public static void checkoutFileFromId(String commitId, String filename) {
-        //TODO 2. takes version of the file to CWD from specific commit.
         try {
             checkout(retrieveCommit(commitId), filename);
         } catch (IllegalArgumentException e) {
@@ -401,7 +395,6 @@ public class Repository {
     }
 
     public static void checkoutBranch(String branchName) {
-        //TODO 3. takes all the file to CWD from the specific branch head of commit.
         if (branchName.equals(getBranchInfo())) {
             System.out.print("No need to checkout the current branch. \n");
             System.exit(0);
@@ -447,7 +440,6 @@ public class Repository {
     }
 
     public static void branch(String branchName) {
-        //TODO 1. use a file to record each branch with a corresponding commit.
         if (checkBranchExist(branchName)) {
             System.out.print("A branch with that name already exists. \n");
             System.exit(0);
@@ -456,7 +448,6 @@ public class Repository {
     }
 
     public static void removeBranch(String branchName) {
-        //TODO 1. delete data related to specified branch name in the branch file.
         if (!checkBranchExist(branchName)) {
             System.out.print("A branch with that name does not exist. \n");
             System.exit(0);
@@ -479,8 +470,6 @@ public class Repository {
     }
 
     public static void reset(String commitId) {
-        //TODO 1.  moves the current branch's head to that commit node.
-        //TODO 2. clear the staged area.
         try {
             Commit version = retrieveCommit(commitId);
             if (!version.getBranch().equals(getBranchInfo())) {
@@ -506,9 +495,6 @@ public class Repository {
 
 
     public static void merge(String branchName) {
-        //TODO 1. if LCA is the given branch we do noting just print message.
-        //TODO 2. if LCA is the current branch we fast-forward.
-
         String headId = getBranchHeadId(getBranchInfo());
         Commit head = retrieveCommit(headId);
 
@@ -533,16 +519,6 @@ public class Repository {
         Set<String> commitFileName = new HashSet<>();
         commitFileName.addAll(headDiff.keySet());
         commitFileName.addAll(otherDiff.keySet());
-
-        //main logic :
-        //TODO rule 1. modified in other but not head : Other.
-        //TODO rule 2. modified in head but not other : Head.
-        //TODO rule 3. modified in other and ead : 1. in same way : DNM 2. in diff way : conflict.
-        //TODO rule 4. not in split and other but in head : Head.
-        //TODO rule 5. not in split and head but in other : Other.
-        //TODO rule 6. unmodified in head but not present in other : Remove.
-        //TODO rule 7. unmodified in other but not present in head : Remain or Remove.
-        //Note : Result in Head should consider merge commit is base on head commit.
 
         boolean conflictFlag = false;
         for (String s : commitFileName) {
@@ -665,7 +641,6 @@ public class Repository {
             c2 = retrieveCommit(c2.getParents().get(0));
         }
 
-
         return retrieveCommit(lcaId);
     }
 
@@ -701,7 +676,7 @@ public class Repository {
                 if (!base.containsKey(s) || !other.get(s).equals(base.get(s))) { // modified in other or added in other
                     res.put(s, other.get(s));
                 }
-            } else {                                    // removed in other
+            } else { // removed in other
                 res.put(s, "");
             }
         }
