@@ -17,5 +17,5 @@ A version-control system is essentially a backup system for related collections 
 # The Commands
 
 init
-  Usage: java gitlet.Main init
+  Usage: java gitlet.Main init 
   Description: Creates a new Gitlet version-control system in the current directory. 
