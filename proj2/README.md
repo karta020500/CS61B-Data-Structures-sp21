@@ -13,3 +13,9 @@ A version-control system is essentially a backup system for related collections 
 4. Maintaining related sequences of commits, called branches.
 
 5. Merging changes made in one branch into another.
+
+# The Commands
+
+init
+  Usage: java gitlet.Main init
+  Description: Creates a new Gitlet version-control system in the current directory. 
